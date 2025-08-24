@@ -26,3 +26,5 @@ def list_jobs(current_user=Depends(role_required(["candidate"]))):
 @router.post("/admin")
 def admin_dashboard(current_user=Depends(role_required(["admin"]))):
     return {"message" : f"Welcome Admin {current_user.username}"}
+
+

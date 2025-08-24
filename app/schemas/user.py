@@ -1,39 +1,32 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from datetime import datetime
-from enum import Enum as PyEnum
+from enum import Enum
 
-class UserRoleEnum(str, PyEnum):
+class UserRoleEnum(str, Enum):
     candidate = "candidate"
     recruiter = "recruiter"
     admin = "admin"
 
 
-# For Registration
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
 class UserCreate(BaseModel):
-    username: str = Field(..., description="Enter your username", min_length=3, max_length=50)
-    password: str = Field(..., description="Enter your password", min_length=6, max_length=100)
-    email: EmailStr = Field(..., description="Enter your email")
-    userrole : UserRoleEnum = UserRoleEnum.candidate
+    username: str
+    password: str
+    email: EmailStr
+    role: UserRoleEnum =Field(..., alias="userrole")
 
 class UserOut(BaseModel):
     id: int
     username: str
     email: EmailStr
-    created_at: datetime
+    role: UserRoleEnum = Field(..., alias="userrole")
 
-    model_config = {"from_attributes": True}
-
-# For login
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-# JWT token response
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-# Token payload for decoding
-class TokenData(BaseModel):
-    username: Optional[str] = None
+    class Config:
+        from_attributes = True
+        use_enum_values = True

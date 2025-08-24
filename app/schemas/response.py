@@ -7,14 +7,22 @@ class AnswerCreate(BaseModel):
     answer_text: Optional[Annotated[str, Field(min_length=1)]] = None
     video_path: str
 
-class AnswerOut(BaseModel):
-    id: int
-    question_id: int
-    session_id: int
-    answer_text: Optional[str] = None
-    video_path: str
-    created_at: datetime
-
 class PerformanceReviewOut(BaseModel):
     id: int
-    overall_score: str
+    overall_score: int
+
+
+class CandidateResponse(BaseModel):
+    interview_id: int
+    candidate_name: str
+    candidate_email: str
+    answers: list[str] = []
+    video_url: Optional[str] = None
+    transcript: Optional[str] = None
+
+class Evaluation(BaseModel):
+    response_id: int
+    score: float
+    feedback: str
+    strengths: list[str]
+    weaknesses: list[str]

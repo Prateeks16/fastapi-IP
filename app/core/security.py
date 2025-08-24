@@ -2,12 +2,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt as pyjwt
 from passlib.context import CryptContext
 from core.config import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM
-from schemas.user import TokenData, UserCreate, UserOut, Token
+from schemas.user import TokenData, UserOut, Token, UserCreate
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status, Depends, APIRouter
 from typing import Annotated
 from database.connection import get_db
-from database.models import Users, UserRole
+from database.models import UserRole, Users
 from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["Authentication and Authorisation"])
@@ -98,21 +98,20 @@ def read_users_me(current_user: Users = Depends(get_current_user)):
 # ------------------------------
 @router.post("/register", response_model=UserOut)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    if db.query(Users).filter(Users.username == user.username).first():
-        raise HTTPException(status_code=400, detail="Username already taken")
-    if db.query(Users).filter(Users.email == user.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
 
-    try:
-        role_enum = UserRole(user.userrole)  
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid role value")
+    existing_user = db.query(Users).filter(Users.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    existing_email = db.query(Users).filter(Users.email == user.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     new_user = Users(
         username=user.username,
         email=user.email,
-        userrole=role_enum,
-        password_hash=hash_password(user.password)
+        password_hash=hash_password(user.password),
+        userrole=UserRole(user.role)  
     )
 
     db.add(new_user)
